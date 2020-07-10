@@ -63,7 +63,15 @@ def table = slurped.products.collect { product ->      //iterate over all produc
                             sumPriceProduct += item.quantity[index] * Float.parseFloat(product.price)
                         }
                     }
-                    [id:product.id, name: product.name, orders: countOrders, total:sumPriceProduct] // Map value to save in table
+                    [id:product.id, name:product.name, orders:countOrders, total:sumPriceProduct] // Map value to save in table
              }
-               
-println table
+    
+println "+--------------+---------+------------+";
+println "| Product      |  Orders |      Total |";
+println "+--------------+---------+------------+";
+table.each { key ->
+    println (sprintf( '|%1$s |%2$s |%3$s|',
+        [key.name.padRight(13), key.orders.toString().center(8), substring(key.total.toString()).center(8)]))
+}
+println "+--------------+---------+------------+";
+
