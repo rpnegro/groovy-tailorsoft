@@ -1,10 +1,10 @@
 /*
-Script Objetive: Get a Json structure from a web server and parses into a table with this columns: 
+Script Objective: Get a JSON structure from a web server and parses into a table with these columns: 
 - Name of the product
 - Number of orders placed for that product
 - Total dollars spent on that product across all orders.
 
-Json Structure:
+JSON Structure:
 {
     "products" : [
         {"id":"xx", "name" : "xx", "price" : "xx"},
@@ -21,13 +21,16 @@ Json Structure:
     ],
 }
 
-Asumtions: The Json is a static structure with no changes during the execution of this scritp. 
-If this contidition change, the script need to be adjusted for data integrity and optimal results.
+Assumptions: The JSON is a static structure with no changes during the execution of this script. 
+If this condition change, the script needs to be adjusted for data integrity and optimal results.
 
-Considerations: Change the type of JsonSlurper to support fast processing, recommendation is to use INDEX_OVERLAY 
+Considerations: Change the type of JsonSlurper to support fast processing, the recommendation is to use INDEX_OVERLAY 
 for JSON buffers under 2MB. https://docs.groovy-lang.org/2.5.7/html/gapi/groovy/json/JsonSlurper.html for more information. 
 Require to import.json.JsonParserType. Check Groovy version for specific API information 
 --> println "Groovy version: " + GroovySystem.getVersion()
+
+TODO: In order to make the script less prone to errors, could be convenient to check the response code of the HTTP
+request and have the proper error handling
 
 Customer: TailorSoft
 Version 0.1
@@ -59,19 +62,23 @@ def table = slurped.products.collect { product ->      //iterate over all produc
                     slurped.orders.items.collect { item -> // iterate over orders find the produtts. Colletion like [productId:"x", quantity:"x"]
                         if(item.productId.find { it == product.id } as Boolean){
                             def index = item.productId.indexOf(product.id) // Find the position of the product between many items
-                            countOrders += 1                              
-                            sumPriceProduct += item.quantity[index] * Float.parseFloat(product.price)
+                            countOrders += 1                  
+                            sumPriceProduct += item.quantity[index] * new BigDecimal(product.price)
                         }
                     }
-                    [id:product.id, name:product.name, orders:countOrders, total:sumPriceProduct] // Map value to save in table
+                    [id:product.id, name:product.name, orders:countOrders, total:sumPriceProduct] // Map structure to save in "table"
              }
-    
+
+/*
+Once the "table" has the result of the JSON file its time to print the result to the output
+*/
 println "+--------------+---------+------------+";
 println "| Product      |  Orders |      Total |";
 println "+--------------+---------+------------+";
 table.each { key ->
-    println (sprintf( '|%1$s |%2$s |%3$s|',
-        [key.name.padRight(13), key.orders.toString().center(8), substring(key.total.toString()).center(8)]))
+    println sprintf ('|%1$s |%2$s |%3$s|', 
+                    [key.name.padRight(13), 
+                    key.orders.toString().center(8), 
+                    key.total.toString().padLeft(12)])
 }
 println "+--------------+---------+------------+";
-
