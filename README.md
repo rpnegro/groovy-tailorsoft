@@ -4,23 +4,6 @@ Script Objetive: Get a Json structure from a web server and parses into a table 
 - Number of orders placed for that product
 - Total dollars spent on that product across all orders.
 
-Json Structure:
-{
-    "products" : [
-        {"id":"xx", "name" : "xx", "price" : "xx"},
-        {"id":"xx", "name" : "xx", "price" : "xx"},
-    ],
-    "orders" : [
-        { 
-            "id" : "xx",
-            "items" : [
-                {"productId" : "xx", "quantity":xx},
-                {"productId" : "xx", "quantity":xx}
-            ]
-        },
-    ],
-}
-
 Asumtions: The Json is a static structure with no changes during the execution of this scritp. 
 If this contidition change, the script need to be adjusted for data integrity and optimal results.
 
