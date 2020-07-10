@@ -1,0 +1,69 @@
+/*
+Script Objetive: Get a Json structure from a web server and parses into a table with this columns: 
+- Name of the product
+- Number of orders placed for that product
+- Total dollars spent on that product across all orders.
+
+Json Structure:
+{
+    "products" : [
+        {"id":"xx", "name" : "xx", "price" : "xx"},
+        {"id":"xx", "name" : "xx", "price" : "xx"},
+    ],
+    "orders" : [
+        { 
+            "id" : "xx",
+            "items" : [
+                {"productId" : "xx", "quantity":xx},
+                {"productId" : "xx", "quantity":xx}
+            ]
+        },
+    ],
+}
+
+Asumtions: The Json is a static structure with no changes during the execution of this scritp. 
+If this contidition change, the script need to be adjusted for data integrity and optimal results.
+
+Considerations: Change the type of JsonSlurper to support fast processing, recommendation is to use INDEX_OVERLAY 
+for JSON buffers under 2MB. https://docs.groovy-lang.org/2.5.7/html/gapi/groovy/json/JsonSlurper.html for more information. 
+Require to import.json.JsonParserType. Check Groovy version for specific API information 
+--> println "Groovy version: " + GroovySystem.getVersion()
+
+Customer: TailorSoft
+Version 0.1
+Developer: @rpnegro
+*/
+
+
+import groovy.json.JsonSlurper
+import groovy.json.JsonParserType
+
+def url_Json = new URL("https://www.tailorsoft.co/sample.json")
+def slurped = new groovy.json.JsonSlurper(type: JsonParserType.INDEX_OVERLAY)
+slurped = new JsonSlurper().parse(url_Json)
+
+
+// define variables to count orders per product and total amount of sale per product
+def countOrders = 0
+def sumPriceProduct = 0
+
+/*
+The collection "table" holds the extracted information from JSON file and will be printed to the output 
+with the format [[id:"x", name:"X", orders:"x", total:"X"],[id:"x", name:"X", orders:"x", total:"X"]] 
+althoug the column "id" is not required by the customer, it could help to iterate with the id of the product to extract 
+more information
+*/
+def table = slurped.products.collect { product ->      //iterate over all products 
+                    countOrders = 0            //initialize counter per product and total amount during iteration
+                    sumPriceProduct = 0        
+                    slurped.orders.items.collect { item -> // iterate over orders find the produtts. Colletion like [productId:"x", quantity:"x"]
+                        if(item.productId.find { it == product.id } as Boolean){
+                            def index = item.productId.indexOf(product.id) // Find the position of the product between many items
+                            countOrders += 1                              
+                            sumPriceProduct += item.quantity[index] * Float.parseFloat(product.price)
+                        }
+                    }
+                    [id:product.id, name: product.name, orders: countOrders, total:sumPriceProduct] // Map value to save in table
+             }
+               
+println table
